@@ -27,5 +27,7 @@
   },
   "[scss]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "editor.accessibilityPageSize": 20,
+  "editor.fontSize": 18
 }

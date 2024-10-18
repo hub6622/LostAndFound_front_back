@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref, watch } from "vue"
-import { createTableDataApi, deleteTableDataApi, updateTableDataApi, getTableDataApi } from "@/api/table"
+import { createTableDataApi, deleteTableDataApi, updateTableDataApi } from "@/api/table"
 import { type CreateOrUpdateTableRequestData, type TableData } from "@/api/table/types/table"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
@@ -9,7 +9,7 @@ import { cloneDeep } from "lodash-es"
 
 defineOptions({
   // 命名当前组件
-  name: "ElementPlus"
+  name: "ItemManage"
 })
 
 const loading = ref<boolean>(false)
@@ -18,14 +18,14 @@ const { paginationData, handleCurrentChange, handleSizeChange } = usePagination(
 //#region 增
 const DEFAULT_FORM_DATA: CreateOrUpdateTableRequestData = {
   id: undefined,
-  username: "",
+  name: "",
   password: ""
 }
 const dialogVisible = ref<boolean>(false)
 const formRef = ref<FormInstance | null>(null)
 const formData = ref<CreateOrUpdateTableRequestData>(cloneDeep(DEFAULT_FORM_DATA))
 const formRules: FormRules<CreateOrUpdateTableRequestData> = {
-  username: [{ required: true, trigger: "blur", message: "请输入用户名" }],
+  name: [{ required: true, trigger: "blur", message: "请输入用户名" }],
   password: [{ required: true, trigger: "blur", message: "请输入密码" }]
 }
 const handleCreateOrUpdate = () => {

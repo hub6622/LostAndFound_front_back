@@ -34,11 +34,10 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
       strictPort: false,
       /** 接口代理 */
       proxy: {
-        "/api/v1": {
-          target: "https://mock.mengxuegu.com/mock/63218b5fb4c53348ed2bc212",
-          ws: true,
-          /** 是否允许跨域 */
-          changeOrigin: true
+        '/api': {
+          target: 'http://localhost:8888',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
         }
       },
       /** 预热常用文件，提高初始页面加载速度 */
@@ -62,7 +61,7 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
            */
           manualChunks: {
             vue: ["vue", "vue-router", "pinia"],
-            element: ["element-plus", "@element-plus/icons-vue"],
+            element: ["user-manage", "@user-manage/icons-vue"],
             vxe: ["vxe-table", "vxe-table-plugin-element", "xe-utils"]
           }
         }
