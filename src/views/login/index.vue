@@ -20,8 +20,8 @@ const loading = ref(false)
 
 /** 登录表单数据 */
 const loginFormData: LoginRequestData = reactive({
-  name: "admin",
-  password: "12345678",
+  name: "",
+  password: "",
 })
 /** 登录表单校验规则 */
 const loginFormRules: FormRules = {

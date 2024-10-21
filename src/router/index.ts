@@ -1,5 +1,5 @@
-import { type RouteRecordRaw, createRouter } from "vue-router"
-import { history, flatMultiLevelRoutes } from "./helper"
+import {type RouteRecordRaw, createRouter} from "vue-router"
+import {history, flatMultiLevelRoutes} from "./helper"
 import routeSettings from "@/config/route"
 
 const Layouts = () => import("@/layouts/index.vue")
@@ -62,231 +62,180 @@ export const constantRoutes: RouteRecordRaw[] = [
     ]
   },
   {
-    path: "/unocss",
-    component: Layouts,
-    redirect: "/unocss/index",
-    children: [
-      {
-        path: "index",
-        component: () => import("@/views/unocss/index.vue"),
-        name: "UnoCSS",
-        meta: {
-          title: "UnoCSS",
-          svgIcon: "unocss"
-        }
-      }
-    ]
-  },
+    path: "/user-manage",
+    component:
+    Layouts,
+    children:
+      [
+        {
+          path: "/user-manage",
+          component: () => import("@/views/user-manage/index.vue"),
+          name: "UserManage",
+          meta: {
+            title: "账号管理",
+            svgIcon: "user",
+            keepAlive: true
+          },
+        },
+      ]
+  }
+  ,
   {
-    path: "/link",
-    meta: {
-      title: "外链",
-      svgIcon: "link"
-    },
-    children: [
-      {
-        path: "https://juejin.cn/post/7089377403717287972",
-        component: () => {},
-        name: "Link1",
-        meta: {
-          title: "中文文档"
-        }
-      },
-      {
-        path: "https://juejin.cn/column/7207659644487139387",
-        component: () => {},
-        name: "Link2",
-        meta: {
-          title: "新手教程"
-        }
-      }
-    ]
-  },
+    path: "/item-manage",
+    component:
+    Layouts,
+    children:
+      [
+        {
+          path: "/item-manage",
+          component: () => import("@/views/item-manage/index.vue"),
+          name: "ItemManage",
+          meta: {
+            title: "失物管理",
+            svgIcon: "lost-item",
+            keepAlive: true
+          }
+        },
+      ]
+  }
+  ,
   {
-    path: "/table",
-    component: Layouts,
-    redirect: "/table/user-manage",
-    name: "Table",
-    meta: {
-      title: "表格",
-      elIcon: "Grid"
-    },
-    children: [
-      {
-        path: "user-manage",
-        component: () => import("@/views/table/user-manage/index.vue"),
-        name: "UserManage",
-        meta: {
-          title: "账号管理",
-          keepAlive: true
+    path: "/comment-manage",
+    component:
+    Layouts,
+    children:
+      [
+        {
+          path: "/comment-manage",
+          component: () => import("@/views/comment-manage/index.vue"),
+          name: "CommentManage",
+          meta: {
+            title: "评论管理",
+            svgIcon: "comment",
+            keepAlive: true
+          }
+        },
+      ]
+  }
+  ,
+  {
+    path: "/notice-manage",
+    component:
+    Layouts,
+    children:
+      [
+        {
+          path: "/notice-manage",
+          component: () => import("@/views/notice-manage/index.vue"),
+          name: "NoticeManage",
+          meta: {
+            title: "通知管理",
+            svgIcon: "notice",
+            keepAlive: true
+          }
         }
-      },
-      {
-        path: "item-manage",
-        component: () => import("@/views/table/item-manage/index.vue"),
-        name: "ItemManage",
-        meta: {
-          title: "失物管理",
-          keepAlive: true
-        }
-      }
-    ]
-  },
+      ]
+  }
+  ,
   {
     path: "/menu",
-    component: Layouts,
-    redirect: "/menu/menu1",
-    name: "Menu",
-    meta: {
-      title: "多级路由",
-      svgIcon: "menu"
-    },
+    component:
+    Layouts,
+    redirect:
+      "/menu/menu1",
+    name:
+      "Menu",
+    meta:
+      {
+        title: "关于本站",
+        svgIcon:
+          "menu"
+      }
+    ,
     children: [
       {
         path: "menu1",
-        component: () => import("@/views/menu/menu1/index.vue"),
-        redirect: "/menu/menu1/menu1-1",
+        component: () => {},
+        redirect: "/menu/",
         name: "Menu1",
         meta: {
-          title: "menu1"
+          title: "开发工具",
+          svgIcon: "tools"
         },
         children: [
           {
-            path: "menu1-1",
-            component: () => import("@/views/menu/menu1/menu1-1/index.vue"),
-            name: "Menu1-1",
+            path: "https://github.com/hub6622/LostAndFound_front_back",
+            component: () => {
+            },
+            name: "Link1",
             meta: {
-              title: "menu1-1",
-              keepAlive: true
+              title: "中文文档",
+              svgIcon: "document"
             }
           },
           {
-            path: "menu1-2",
-            component: () => import("@/views/menu/menu1/menu1-2/index.vue"),
-            redirect: "/menu/menu1/menu1-2/menu1-2-1",
-            name: "Menu1-2",
-            meta: {
-              title: "menu1-2"
+            path: "https://juejin.cn/column/7207659644487139387",
+            component: () => {
             },
-            children: [
-              {
-                path: "menu1-2-1",
-                component: () => import("@/views/menu/menu1/menu1-2/menu1-2-1/index.vue"),
-                name: "Menu1-2-1",
-                meta: {
-                  title: "menu1-2-1",
-                  keepAlive: true
-                }
-              },
-              {
-                path: "menu1-2-2",
-                component: () => import("@/views/menu/menu1/menu1-2/menu1-2-2/index.vue"),
-                name: "Menu1-2-2",
-                meta: {
-                  title: "menu1-2-2",
-                  keepAlive: true
-                }
-              }
-            ]
-          },
-          {
-            path: "menu1-3",
-            component: () => import("@/views/menu/menu1/menu1-3/index.vue"),
-            name: "Menu1-3",
+            name: "Link2",
             meta: {
-              title: "menu1-3",
-              keepAlive: true
+              title: "新手教程",
+              svgIcon: "tutorial"
             }
           }
         ]
       },
       {
-        path: "menu2",
-        component: () => import("@/views/menu/menu2/index.vue"),
-        name: "Menu2",
+        path: "https://juejin.cn/post/7089377403717287972",
+        component: () => {
+        },
+        name: "Link1",
         meta: {
-          title: "menu2",
-          keepAlive: true
-        }
-      }
-    ]
-  },
-  {
-    path: "/hook-demo",
-    component: Layouts,
-    redirect: "/hook-demo/use-fetch-select",
-    name: "HookDemo",
-    meta: {
-      title: "Hook",
-      elIcon: "Menu",
-      alwaysShow: true
-    },
-    children: [
-      {
-        path: "use-fetch-select",
-        component: () => import("@/views/hook-demo/use-fetch-select.vue"),
-        name: "UseFetchSelect",
-        meta: {
-          title: "useFetchSelect"
-        }
-      },
-      {
-        path: "use-fullscreen-loading",
-        component: () => import("@/views/hook-demo/use-fullscreen-loading.vue"),
-        name: "UseFullscreenLoading",
-        meta: {
-          title: "useFullscreenLoading"
-        }
-      },
-      {
-        path: "use-watermark",
-        component: () => import("@/views/hook-demo/use-watermark.vue"),
-        name: "UseWatermark",
-        meta: {
-          title: "useWatermark"
+          title: "Github",
+          svgIcon: "github"
         }
       }
     ]
   }
-]
+  ]
 
-/**
- * 动态路由
- * 用来放置有权限 (Roles 属性) 的路由
- * 必须带有 Name 属性
- */
-export const dynamicRoutes: RouteRecordRaw[] = [
-  {
-    path: "/permission",
-    component: Layouts,
-    redirect: "/permission/page",
-    name: "Permission",
-    meta: {
-      title: "权限",
-      svgIcon: "lock",
-      roles: ["admin", "editor"], // 可以在根路由中设置角色
-      alwaysShow: true // 将始终显示根菜单
-    },
-    children: [
-      {
-        path: "page",
-        component: () => import("@/views/permission/page.vue"),
-        name: "PagePermission",
-        meta: {
-          title: "页面级",
-          roles: ["admin"] // 或者在子导航中设置角色
-        }
-      },
-      {
-        path: "directive",
-        component: () => import("@/views/permission/directive.vue"),
-        name: "DirectivePermission",
-        meta: {
-          title: "按钮级" // 如果未设置角色，则表示：该页面不需要权限，但会继承根路由的角色
-        }
-      }
-    ]
-  }
+    /**
+     * 动态路由
+     * 用来放置有权限 (Roles 属性) 的路由
+     * 必须带有 Name 属性
+     */
+    export const dynamicRoutes: RouteRecordRaw[] = [
+  // {
+  //   path: "/permission",
+  //   component: Layouts,
+  //   redirect: "/permission/page",
+  //   name: "Permission",
+  //   meta: {
+  //     title: "权限",
+  //     svgIcon: "lock",
+  //     roles: ["admin", "editor"], // 可以在根路由中设置角色
+  //     alwaysShow: true // 将始终显示根菜单
+  //   },
+  //   children: [
+  //     {
+  //       path: "page",
+  //       component: () => import("@/views/permission/page.vue"),
+  //       name: "PagePermission",
+  //       meta: {
+  //         title: "页面级",
+  //         roles: ["admin"] // 或者在子导航中设置角色
+  //       }
+  //     },
+  //     {
+  //       path: "directive",
+  //       component: () => import("@/views/permission/directive.vue"),
+  //       name: "DirectivePermission",
+  //       meta: {
+  //         title: "按钮级" // 如果未设置角色，则表示：该页面不需要权限，但会继承根路由的角色
+  //       }
+  //     }
+  //   ]
+  // }
 ]
 
 const router = createRouter({
@@ -299,7 +248,7 @@ export function resetRouter() {
   // 注意：所有动态路由路由必须带有 Name 属性，否则可能会不能完全重置干净
   try {
     router.getRoutes().forEach((route) => {
-      const { name, meta } = route
+      const {name, meta} = route
       if (name && meta.roles?.length) {
         router.hasRoute(name) && router.removeRoute(name)
       }
