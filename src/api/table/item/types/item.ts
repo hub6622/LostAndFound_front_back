@@ -4,7 +4,7 @@ export interface ItemData {
   /** 物品ID */
   id?: number;
   /** 分类 */
-  category?: string;
+  categories?: string[];
   /** 标题 */
   title?: string;
   /** 作者 */

@@ -78,8 +78,7 @@ export const constantRoutes: RouteRecordRaw[] = [
           },
         },
       ]
-  }
-  ,
+  },
   {
     path: "/item-manage",
     component:
@@ -135,8 +134,43 @@ export const constantRoutes: RouteRecordRaw[] = [
           }
         }
       ]
-  }
-  ,
+  },
+  {
+    path: "/category-manage",
+    component:
+    Layouts,
+    children:
+      [
+        {
+          path: "/category-manage",
+          component: () => import("@/views/category-manage/index.vue"),
+          name: "CategoryManage",
+          meta: {
+            title: "物品类型管理",
+            svgIcon: "category",
+            keepAlive: true
+          },
+        },
+      ]
+  },
+  {
+    path: "/file-manage",
+    component:
+    Layouts,
+    children:
+      [
+        {
+          path: "/file-manage",
+          component: () => import("@/views/file-manage/index.vue"),
+          name: "FileManage",
+          meta: {
+            title: "文件管理",
+            svgIcon: "file",
+            keepAlive: true
+          },
+        },
+      ]
+  },
   {
     path: "/menu",
     component:

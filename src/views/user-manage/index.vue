@@ -1,3 +1,151 @@
+
+
+<template>
+  <div class="app-container">
+    <el-card v-loading="loading" shadow="never" class="search-wrapper">
+      <el-form ref="searchFormRef" :inline="true" :model="searchData">
+        <el-form-item prop="username" label="用户名">
+          <el-input v-model="searchData.username" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item prop="phone" label="手机号">
+          <el-input v-model="searchData.phone" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+          <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+    <el-card v-loading="loading" shadow="never">
+      <div class="toolbar-wrapper">
+        <div>
+          <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">新增用户</el-button>
+          <el-button type="danger" :icon="Delete" @click="handleBatchDelete">批量删除</el-button>
+        </div>
+        <div>
+          <el-tooltip content="刷新当前页">
+            <el-button type="primary" :icon="RefreshRight" circle @click="getTableData" />
+          </el-tooltip>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <el-table :data="tableData" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column prop="name" label="用户名" align="center" />
+          <el-table-column prop="roles" width="100" label="角色" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.isAdmin === 1" type="primary" effect="plain">admin</el-tag>
+              <el-tag v-else type="warning" effect="plain">user</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="phone" label="手机号" align="center" />
+          <el-table-column prop="email" label="邮箱" align="center" />
+          <el-table-column prop="sex" width="60" label="性别" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.sex === 0" type="danger" effect="plain">女</el-tag>
+              <el-tag v-else type="success" effect="plain">男</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="avatar" label="头像" align="center">
+            <template #default="scope">
+              <el-image
+                style="width: 40px; height: 40px"
+                :src="scope.row.avatar"
+                :preview-src-list="[scope.row.avatar]"
+                hide-on-click-modal
+                :preview-teleported="true"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="loginTime" label="最后登录时间" align="center" />
+          <el-table-column prop="status" label="状态" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.status" type="success" effect="plain">启用</el-tag>
+              <el-tag v-else type="danger" effect="plain">禁用</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" align="center" />
+          <el-table-column fixed="right" label="操作" width="350" align="center">
+            <template #default="scope">
+              <el-button type="success" text bg size="small" @click="handleProhibit(scope.row.id, 0)" v-if="scope.row.status === 0">启用账号</el-button>
+              <el-button type="danger" text bg size="small" @click="handleProhibit(scope.row.id, 1)" v-else>禁用账号</el-button>
+              <el-button type="primary" text bg size="small" @click="handleResetPwd(scope.row.id)">重置密码</el-button>
+              <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">修改</el-button>
+              <el-button type="danger" text bg size="small" @click="handleDelete([scope.row.id])">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div class="pager-wrapper">
+        <el-pagination
+          background
+          :layout="paginationData.layout"
+          :page-sizes="paginationData.pageSizes"
+          :total="paginationData.total"
+          :page-size="paginationData.pageSize"
+          :current-page="paginationData.currentPage"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
+    <!-- 新增/修改 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="formData.id === undefined ? '新增用户' : '修改'"
+      @closed="resetForm"
+      width="30%"
+    >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
+        <el-form-item prop="name" label="用户名">
+          <el-input v-model="formData.name" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item prop="phone" label="手机号">
+          <el-input v-model="formData.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item prop="email" label="邮箱">
+          <el-input v-model="formData.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item prop="avatar" label="头像">
+          <el-upload
+            class="avatar-uploader"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            action="/api/upload"
+            :headers="{'Authorization': token}"
+          >
+            <img v-if="formData.avatar" :src="formData.avatar" class="avatar" />
+            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+          </el-upload>
+        </el-form-item>
+        <el-form-item prop="sex" label="性别">
+          <el-select v-model="formData.sex" placeholder="请选择性别">
+            <el-option label="男" :value="1" />
+            <el-option label="女" :value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="status" label="状态">
+          <el-select v-model="formData.status" placeholder="请选择状态">
+            <el-option label="启用" :value="1" />
+            <el-option label="禁用" :value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="isAdmin" label="权限">
+          <el-select v-model="formData.isAdmin" placeholder="请选择权限">
+            <el-option label="管理员" :value="1" />
+            <el-option label="普通用户" :value="0" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleCreateOrUpdate" :loading="loading">确认</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
 <script lang="ts" setup>
 import { reactive, ref, watch } from "vue"
 import {
@@ -173,10 +321,10 @@ const handleSearch = () => {
       paginationData.total = data.data.length
       tableData.value = data.data
     }).finally(
-      () => {
-        searchData.phone = null
-        searchData.username = null
-      }
+    () => {
+      searchData.phone = null
+      searchData.username = null
+    }
   )
 }
 
@@ -205,154 +353,6 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
   getTableData()
 }, { immediate: true })
 </script>
-
-
-<template>
-  <div class="app-container">
-    <el-card v-loading="loading" shadow="never" class="search-wrapper">
-      <el-form ref="searchFormRef" :inline="true" :model="searchData">
-        <el-form-item prop="username" label="用户名">
-          <el-input v-model="searchData.username" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item prop="phone" label="手机号">
-          <el-input v-model="searchData.phone" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-    <el-card v-loading="loading" shadow="never">
-      <div class="toolbar-wrapper">
-        <div>
-          <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">新增用户</el-button>
-          <el-button type="danger" :icon="Delete" @click="handleBatchDelete">批量删除</el-button>
-        </div>
-        <div>
-          <el-tooltip content="刷新当前页">
-            <el-button type="primary" :icon="RefreshRight" circle @click="getTableData" />
-          </el-tooltip>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <el-table :data="tableData" @selection-change="handleSelectionChange">
-          <el-table-column type="selection" width="50" align="center" />
-          <el-table-column prop="name" label="用户名" align="center" />
-          <el-table-column prop="roles" width="100" label="角色" align="center">
-            <template #default="scope">
-              <el-tag v-if="scope.row.isAdmin === 1" type="primary" effect="plain">admin</el-tag>
-              <el-tag v-else type="warning" effect="plain">user</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="phone" label="手机号" align="center" />
-          <el-table-column prop="email" label="邮箱" align="center" />
-          <el-table-column prop="sex" width="60" label="性别" align="center">
-            <template #default="scope">
-              <el-tag v-if="scope.row.sex === 0" type="danger" effect="plain">女</el-tag>
-              <el-tag v-else type="success" effect="plain">男</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="avatar" label="头像" align="center">
-            <template #default="scope">
-              <el-image
-                style="width: 40px; height: 40px"
-                :src="scope.row.avatar"
-                :preview-src-list="[scope.row.avatar]"
-                hide-on-click-modal
-                :preview-teleported="true"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column prop="loginTime" label="最后登录时间" align="center" />
-          <el-table-column prop="status" label="状态" align="center">
-            <template #default="scope">
-              <el-tag v-if="scope.row.status" type="success" effect="plain">启用</el-tag>
-              <el-tag v-else type="danger" effect="plain">禁用</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createTime" label="创建时间" align="center" />
-          <el-table-column fixed="right" label="操作" width="350" align="center">
-            <template #default="scope">
-              <el-button type="success" text bg size="small" @click="handleProhibit(scope.row.id, 0)" v-if="scope.row.status === 0">启用账号</el-button>
-              <el-button type="danger" text bg size="small" @click="handleProhibit(scope.row.id, 1)" v-else>禁用账号</el-button>
-              <el-button type="primary" text bg size="small" @click="handleResetPwd(scope.row.id)">重置密码</el-button>
-              <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">修改</el-button>
-              <el-button type="danger" text bg size="small" @click="handleDelete([scope.row.id])">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-      <div class="pager-wrapper">
-        <el-pagination
-          background
-          :layout="paginationData.layout"
-          :page-sizes="paginationData.pageSizes"
-          :total="paginationData.total"
-          :page-size="paginationData.pageSize"
-          :current-page="paginationData.currentPage"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
-    <!-- 新增/修改 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="formData.id === undefined ? '新增用户' : '修改'"
-      @closed="resetForm"
-      width="30%"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
-        <el-form-item prop="name" label="用户名">
-          <el-input v-model="formData.name" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item prop="phone" label="手机号">
-          <el-input v-model="formData.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item prop="email" label="邮箱">
-          <el-input v-model="formData.email" placeholder="请输入邮箱" />
-        </el-form-item>
-        <el-form-item prop="avatar" label="头像">
-          <el-upload
-            class="avatar-uploader"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload"
-            action="/api/upload"
-            :headers="{'Authorization': token}"
-          >
-            <img v-if="formData.avatar" :src="formData.avatar" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-        </el-form-item>
-        <el-form-item prop="sex" label="性别">
-          <el-select v-model="formData.sex" placeholder="请选择性别">
-            <el-option label="男" :value="1" />
-            <el-option label="女" :value="0" />
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="status" label="状态">
-          <el-select v-model="formData.status" placeholder="请选择状态">
-            <el-option label="启用" :value="1" />
-            <el-option label="禁用" :value="0" />
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="isAdmin" label="权限">
-          <el-select v-model="formData.isAdmin" placeholder="请选择权限">
-            <el-option label="管理员" :value="1" />
-            <el-option label="普通用户" :value="0" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleCreateOrUpdate" :loading="loading">确认</el-button>
-      </template>
-    </el-dialog>
-  </div>
-</template>
-
 
 
 <style lang="scss" scoped>

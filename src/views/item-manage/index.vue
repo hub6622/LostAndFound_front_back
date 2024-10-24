@@ -13,6 +13,8 @@ import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@el
 import { usePagination } from "@/hooks/usePagination"
 import { cloneDeep } from "lodash-es"
 import { useUserStore } from "@/store/modules/user"
+import {CategoryData} from "@/api/table/category/types/category";
+import {getCategoryDataApi} from "@/api/table/category";
 
 defineOptions({
   // 命名当前组件
@@ -26,18 +28,19 @@ const token = useUserStore().token
 //#region 增
 const DEFAULT_FORM_DATA: ItemData = {
   id: undefined,
-  category: "",
+  categories: [],
   title: "",
   author: { name: "" },
   picUrl: "",
   content: "",
   lostOrFound: 0
 }
+const categoryData = ref<CategoryData[]>([])
 const dialogVisible = ref<boolean>(false)
 const formRef = ref<FormInstance | null>(null)
 const formData = ref<ItemData>(cloneDeep(DEFAULT_FORM_DATA))
 const formRules: FormRules<ItemData> = {
-  category: [{ required: true, message: '请输入分类', trigger: 'blur' }],
+  categories: [{ required: true, message: '请输入分类', trigger: 'blur' }],
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   author: [{ required: true, message: '请输入作者', trigger: 'blur' }],
   picUrl: [{ required: true, message: '请上传图片', trigger: 'blur' }],
@@ -123,7 +126,11 @@ const searchData = reactive({
   category: null,
   title: null
 })
-
+const getCategoryData = () => {
+  getCategoryDataApi().then((data) => {
+    categoryData.value = data.data
+  })
+}
 const getTableData = () => {
   loading.value = true
   getItemDataApi()
@@ -156,7 +163,7 @@ const handleSearch = () => {
     }
   )
 }
-
+getCategoryData()
 const resetSearch = () => {
   searchFormRef.value?.resetFields()
   getTableData()
@@ -213,7 +220,13 @@ const beforeAvatarUpload = (rawFile: File) => {
       <div class="table-wrapper">
         <el-table :data="tableData" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center"/>
-          <el-table-column prop="category" label="分类" align="center"/>
+          <el-table-column label="分类" align="center">
+            <template v-slot="scope">
+              <el-tag v-for="category in scope.row.categories" :key="category" style="margin-right: 5px;">
+                {{ category }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column prop="title" label="标题" align="center"/>
           <el-table-column prop="author.name" label="作者" align="center"/>
           <el-table-column prop="picUrl" label="图片" align="center">
@@ -270,7 +283,9 @@ const beforeAvatarUpload = (rawFile: File) => {
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
         <el-form-item prop="category" label="分类">
-          <el-input v-model="formData.category" placeholder="请输入分类"/>
+          <el-select v-model="formData.categories" multiple placeholder="请选择分类">
+            <el-option v-for="category in categoryData" :key="category.id" :label="category.categoryName" :value="category.id"/>
+          </el-select>
         </el-form-item>
         <el-form-item prop="title" label="标题">
           <el-input v-model="formData.title" placeholder="请输入标题"/>
