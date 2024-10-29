@@ -11,6 +11,7 @@ export interface FileData {
   fileUrl: string
   createTime: string
   updateTime: string
+  isAvatar: number
 }
 
 export type FileResponseData = ApiResponseData<{

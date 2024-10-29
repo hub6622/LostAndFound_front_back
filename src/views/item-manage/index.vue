@@ -284,7 +284,7 @@ const beforeAvatarUpload = (rawFile: File) => {
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
         <el-form-item prop="category" label="分类">
           <el-select v-model="formData.categories" multiple placeholder="请选择分类">
-            <el-option v-for="category in categoryData" :key="category.id" :label="category.categoryName" :value="category.id"/>
+            <el-option v-for="category in categoryData" :key="category.id" :label="category.categoryName" :value="category.categoryName"/>
           </el-select>
         </el-form-item>
         <el-form-item prop="title" label="标题">

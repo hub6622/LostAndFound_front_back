@@ -90,7 +90,7 @@ export const constantRoutes: RouteRecordRaw[] = [
           component: () => import("@/views/item-manage/index.vue"),
           name: "ItemManage",
           meta: {
-            title: "失物管理",
+            title: "物品管理",
             svgIcon: "lost-item",
             keepAlive: true
           }

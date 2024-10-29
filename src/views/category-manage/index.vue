@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue"
+import { reactive, ref, computed, watch } from "vue"
 import {
   createCategoryApi,
   updateCategoryApi,
@@ -107,18 +107,24 @@ const handleUpdate = (row: CategoryData) => {
 //#endregion
 
 //#region 查
-const tableData = ref<CategoryData[]>([])
+const allTableData = ref<CategoryData[]>([])
+const tableData = computed(() => {
+  const start = (paginationData.currentPage - 1) * paginationData.pageSize
+  const end = start + paginationData.pageSize
+  return allTableData.value.slice(start, end)
+})
 const searchFormRef = ref<FormInstance | null>(null)
 
 const getTableData = () => {
   loading.value = true
   getCategoryDataApi()
-    .then((data) => {
-      paginationData.total = data.data.length
-      tableData.value = data.data
+    .then((response) => {
+      allTableData.value = response.data
+      paginationData.total = allTableData.value.length
     })
     .catch(() => {
-      tableData.value = []
+      ElMessage.error("获取数据失败")
+      allTableData.value = []
     })
     .finally(() => {
       loading.value = false
@@ -127,8 +133,11 @@ const getTableData = () => {
 
 /** 监听分页参数的变化 */
 watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
-  getTableData()
+  // 无需重新获取数据，直接计算当前页的数据
 }, { immediate: true })
+
+// 初始化获取数据
+getTableData()
 </script>
 
 <template>
@@ -185,7 +194,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
       width="30%"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
-        <el-form-item prop="name" label="分类名称">
+        <el-form-item prop="categoryName" label="分类名称">
           <el-input v-model="formData.categoryName" placeholder="请输入分类名称"/>
         </el-form-item>
       </el-form>
@@ -196,6 +205,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
     </el-dialog>
   </div>
 </template>
+
 
 
 

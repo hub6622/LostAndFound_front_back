@@ -3,6 +3,8 @@ import { useLayoutMode } from "@/hooks/useLayoutMode"
 import logo from "@/assets/layouts/logo.png?url"
 import logoText1 from "@/assets/layouts/logo-text-1.png?url"
 import logoText2 from "@/assets/layouts/logo-text-2.png?url"
+import lostItem from "@/icons/svg/lost-item.svg"
+import lostItem2 from "@/icons/svg/lost-item2.svg"
 
 interface Props {
   collapse?: boolean
@@ -19,10 +21,10 @@ const { isLeft, isTop } = useLayoutMode()
   <div class="layout-logo-container" :class="{ collapse: props.collapse, 'layout-mode-top': isTop }">
     <transition name="layout-logo-fade">
       <router-link v-if="props.collapse" key="collapse" to="/">
-        <img :src="logo" class="layout-logo" />
+        <img :src="lostItem" class="layout-logo" />
       </router-link>
       <router-link v-else key="expand" to="/">
-        <img :src="!isLeft ? logoText2 : logoText1" class="layout-logo-text" />
+        <img :src="!isLeft ? lostItem2 : lostItem2" class="layout-logo-text" />
       </router-link>
     </transition>
   </div>

@@ -26,6 +26,12 @@
               />
             </template>
           </el-table-column>
+          <el-table-column prop="isAvatar" label="图片类别" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.isAvatar" type="success" size="mini">用户头像</el-tag>
+              <el-tag v-else type="danger" size="mini">物品图片</el-tag>
+            </template>
+          </el-table-column>
           <el-table-column prop="createTime" label="上传时间" align="center" />
           <el-table-column label="更新时间" align="center">
             <template #default="scope">
@@ -39,12 +45,12 @@
               <span v-if="scope.row.user && scope.row.user.name">{{ scope.row.user.name }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="avatar" label="头像" align="center">
+          <el-table-column prop="user.avatar" label="上传者头像" align="center">
             <template #default="scope">
               <el-image
                 style="width: 40px; height: 40px"
-                :src="scope.row.avatar"
-                :preview-src-list="[scope.row.avatar]"
+                :src="scope.row.user.avatar"
+                :preview-src-list="[scope.row.user.avatar]"
                 hide-on-click-modal
                 :preview-teleported="true"
               />
