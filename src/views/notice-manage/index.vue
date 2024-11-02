@@ -1,158 +1,129 @@
 <script lang="ts" setup>
-import {ref, reactive, watch, onMounted} from "vue"
-import {ElMessage, ElMessageBox} from "element-plus"
-import {Search, Refresh, CirclePlus, Delete, RefreshRight, Plus} from "@element-plus/icons-vue"
-import {usePagination} from "@/hooks/usePagination"
-import {useUserStore} from "@/store/modules/user"
-import {getNoticeDataApi, deleteNoticeApi} from "@/api/table/notice"
-import {type NoticeData} from "@/api/table/notice/types/notice"
+import { ref, reactive, watch, onMounted } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Search, Refresh, CirclePlus, Delete, RefreshRight, Plus } from "@element-plus/icons-vue";
+import { usePagination } from "@/hooks/usePagination";
+import { useUserStore } from "@/store/modules/user";
+import { getNoticeDataApi, deleteNoticeApi, addNoticeApi } from "@/api/table/notice";
+import { type NoticeData } from "@/api/table/notice/types/notice";
 
 // 定义组件选项
 defineOptions({
   name: "NoticeManage"
-})
+});
 
 // 加载状态
-const loading = ref<boolean>(false)
+const loading = ref<boolean>(false);
 
 // 分页数据
-const {paginationData, handleCurrentChange, handleSizeChange} = usePagination()
+const { paginationData, handleCurrentChange, handleSizeChange } = usePagination();
 
 // 获取用户 token
-const token = useUserStore().token
-
-// 搜索数据
-const searchData = reactive({
-  content: "",
-  contact: ""
-})
+const token = useUserStore().token;
 
 // 表格数据
-const tableData = ref<NoticeData[]>([])
+const tableData = ref<NoticeData[]>([]);
+const normalNotices = ref<NoticeData[]>([]);
+const systemNotices = ref<NoticeData[]>([]);
 
 // 表单数据
-const formData = reactive<NoticeData>({
-  id: undefined,
+const formData = reactive({
   content: "",
-  tradeTime: "",
-  contact: "",
-  authorId: undefined,
-  author: {name: ""},
-  itemId: undefined,
-  confirm: 0,
-  updateTime: "",
-  recipientId: undefined
-})
-
+});
 
 // 选中的行
-const selectedRows = ref<NoticeData[]>([])
+const selectedRows = ref<NoticeData[]>([]);
 
 // 对话框显示状态
-const dialogVisible = ref<boolean>(false)
+const dialogVisible = ref<boolean>(false);
 
 // 获取通知数据
 const getTableData = () => {
-  loading.value = true
+  loading.value = true;
   getNoticeDataApi()
     .then((data) => {
-      paginationData.total = data.total
-      tableData.value = data.data
+      paginationData.total = data.total;
+      tableData.value = data.data;
+      normalNotices.value = data.data.filter((item) => item.recipientId !== 0);
+      systemNotices.value = data.data.filter((item) => item.recipientId === 0);
     })
     .catch(() => {
-      ElMessage.error("获取通知数据失败")
-      tableData.value = []
+      ElMessage.error("获取通知数据失败");
+      tableData.value = [];
     })
     .finally(() => {
-      loading.value = false
-    })
-}
-
+      loading.value = false;
+    });
+};
 
 // 处理选择变化
 const handleSelectionChange = (selection: NoticeData[]) => {
-  selectedRows.value = selection
-}
+  selectedRows.value = selection;
+};
 
 // 处理批量删除
 const handleBatchDelete = () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning("请至少选择一条记录")
-    return
+    ElMessage.warning("请至少选择一条记录");
+    return;
   }
   ElMessageBox.confirm(`正在删除 ${selectedRows.value.length} 条记录，确认删除？`, "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
-    type: "warning"
+    type: "warning",
   }).then(() => {
-    const ids = selectedRows.value.map(item => item.id)
+    const ids = selectedRows.value.map((item) => item.id);
     deleteNoticeApi(ids).then(() => {
-      ElMessage.success("删除成功")
-      getTableData()
+      ElMessage.success("删除成功");
+      getTableData();
     }).catch(() => {
-      ElMessage.error("删除失败")
-    })
+      ElMessage.error("删除失败");
+    });
   }).catch(() => {
-    ElMessage.info("已取消删除")
-  })
-}
+    ElMessage.info("已取消删除");
+  });
+};
 
 // 处理单条删除
 const handleDelete = (ids: number[]) => {
   ElMessageBox.confirm("确认删除该记录吗？", "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
-    type: "warning"
+    type: "warning",
   }).then(() => {
     deleteNoticeApi(ids).then(() => {
-      ElMessage.success("删除成功")
-      getTableData()
+      ElMessage.success("删除成功");
+      getTableData();
     }).catch(() => {
-      ElMessage.error("删除失败")
-    })
+      ElMessage.error("删除失败");
+    });
   }).catch(() => {
-    ElMessage.info("已取消删除")
-  })
-}
+    ElMessage.info("已取消删除");
+  });
+};
 
-// 处理启用/禁用
-const handleProhibit = (id: number, status: number) => {
-  // 这里可以添加启用/禁用的逻辑
-  ElMessage.info("启用/禁用功能暂未实现")
-}
+// 显示添加对话框
+const showAddDialog = () => {
+  dialogVisible.value = true;
+  formData.content = "";
+};
 
-// 处理重置密码
-const handleResetPwd = (id: number) => {
-  // 这里可以添加重置密码的逻辑
-  ElMessage.info("重置密码功能暂未实现")
-}
-
-// 处理修改
-const handleUpdate = (row: NoticeData) => {
-  Object.assign(formData, row)
-  dialogVisible.value = true
-}
-
-// 重置表单
-const resetForm = () => {
-  Object.assign(formData, {
-    id: undefined,
-    content: "",
-    tradeTime: "",
-    contact: "",
-    authorId: undefined,
-    author: {name: ""},
-    itemId: undefined,
-    confirm: 0,
-    updateTime: "",
-    recipientId: undefined
-  })
-}
+// 处理添加通知
+const handleAddNotice = () => {
+  console.log("noticeContent" + formData.content);
+  addNoticeApi(formData.content).then(() => {
+    ElMessage.success("通知发布成功");
+    dialogVisible.value = false;
+    getTableData();
+  }).catch(() => {
+    ElMessage.error("通知发布失败");
+  });
+};
 
 // 页面加载时获取数据
 onMounted(() => {
-  getTableData()
-})
+  getTableData();
+});
 </script>
 
 <template>
@@ -160,21 +131,23 @@ onMounted(() => {
     <el-card v-loading="loading" shadow="never">
       <div class="toolbar-wrapper">
         <div>
+          <el-button type="primary" :icon="CirclePlus" @click="showAddDialog">发布通知</el-button>
           <el-button type="danger" :icon="Delete" @click="handleBatchDelete">批量删除</el-button>
         </div>
         <div>
           <el-tooltip content="刷新当前页">
-            <el-button type="primary" :icon="RefreshRight" circle @click="getTableData"/>
+            <el-button type="primary" :icon="RefreshRight" circle @click="getTableData" />
           </el-tooltip>
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="tableData" @selection-change="handleSelectionChange">
-          <el-table-column type="selection" width="50" align="center"/>
-          <el-table-column prop="content" label="内容" align="center"/>
-          <el-table-column prop="tradeTime" label="交易时间" align="center"/>
-          <el-table-column prop="contact" label="联系方式" align="center"/>
-          <el-table-column prop="author.name" label="作者" align="center" width="120"/>
+        <!-- 普通通知表格 -->
+        <el-table :data="normalNotices" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column prop="content" label="内容" align="center" />
+          <el-table-column prop="tradeTime" label="交易时间" align="center" />
+          <el-table-column prop="contact" label="联系方式" align="center" />
+          <el-table-column prop="author.name" label="作者" align="center" width="120" />
           <el-table-column prop="author.avatar" label="作者头像" align="center" width="80">
             <template #default="scope">
               <el-image
@@ -186,27 +159,61 @@ onMounted(() => {
               />
             </template>
           </el-table-column>
-
           <el-table-column prop="confirm" label="确认状态" align="center">
             <template #default="scope">
               <el-tag v-if="scope.row.confirm === 1" type="success" effect="plain">已确认</el-tag>
               <el-tag v-else type="warning" effect="plain">未确认</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="updateTime" label="更新时间" align="center"/>
-          <el-table-column prop="recipient.name" label="接收者姓名" align="center" width="120"/>
+          <el-table-column prop="updateTime" label="更新时间" align="center" />
+          <el-table-column label="接收者姓名" align="center" width="120">
+            <template #default="scope">
+              {{ scope.row.recipient.name || '系统通知' }}
+            </template>
+          </el-table-column>
           <el-table-column prop="recipient.avatar" label="接收者头像" align="center" width="80">
             <template #default="scope">
               <el-image
+                v-if="scope.row.recipient.avatar"
                 style="width: 40px; height: 40px"
                 :src="scope.row.recipient.avatar"
                 :preview-src-list="[scope.row.recipient.avatar]"
                 hide-on-click-modal
                 :preview-teleported="true"
               />
+              <span v-else>无头像</span>
             </template>
           </el-table-column>
+          <el-table-column fixed="right" label="操作" width="350" align="center">
+            <template #default="scope">
+              <el-button type="danger" text bg size="small" @click="handleDelete([scope.row.id])">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
 
+        <!-- 系统通知表格 -->
+        <el-table :data="systemNotices" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column prop="content" label="内容" align="center" />
+          <el-table-column prop="author.name" label="作者" align="center" width="120" />
+          <el-table-column prop="author.avatar" label="作者头像" align="center" width="80">
+            <template #default="scope">
+              <el-image
+                style="width: 40px; height: 40px"
+                :src="scope.row.author.avatar"
+                :preview-src-list="[scope.row.author.avatar]"
+                hide-on-click-modal
+                :preview-teleported="true"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="confirm" label="确认状态" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.confirm === 1" type="success" effect="plain">已确认</el-tag>
+              <el-tag v-else type="warning" effect="plain">未确认</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="updateTime" label="更新时间" align="center" />
           <el-table-column fixed="right" label="操作" width="350" align="center">
             <template #default="scope">
               <el-button type="danger" text bg size="small" @click="handleDelete([scope.row.id])">删除</el-button>
@@ -227,8 +234,24 @@ onMounted(() => {
         />
       </div>
     </el-card>
+
+    <el-dialog v-model="dialogVisible" title="发布通知" width="30%">
+      <el-form :model="formData" label-width="100px">
+        <el-form-item label="内容">
+          <el-input v-model="formData.content" type="textarea" :rows="4"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="handleAddNotice">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
+
+
 
 <style lang="scss" scoped>
 .avatar-uploader .el-upload {

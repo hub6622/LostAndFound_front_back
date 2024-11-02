@@ -8,10 +8,20 @@ export function getNoticeDataApi(){
   })
 }
 
+
 export function deleteNoticeApi(ids: number[]){
   return request({
-      url: "/admin/delNotice",
+    url: "/admin/delNotice",
     method: "post",
     data:  ids
+  })
+}
+
+
+export function addNoticeApi(noticeContent:String){
+  return request({
+    url: "/admin/addNotice",
+    method: "post",
+    data: {noticeContent:noticeContent}
   })
 }
