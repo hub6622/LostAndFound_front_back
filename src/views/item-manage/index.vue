@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue"
+import { reactive, ref, computed, watch } from "vue"
 import {
   createItemApi,
   updateItemApi,
@@ -13,8 +13,8 @@ import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@el
 import { usePagination } from "@/hooks/usePagination"
 import { cloneDeep } from "lodash-es"
 import { useUserStore } from "@/store/modules/user"
-import {CategoryData} from "@/api/table/category/types/category";
-import {getCategoryDataApi} from "@/api/table/category";
+import { CategoryData } from "@/api/table/category/types/category"
+import { getCategoryDataApi } from "@/api/table/category"
 
 defineOptions({
   // 命名当前组件
@@ -170,6 +170,13 @@ const resetSearch = () => {
 }
 //#endregion
 
+/** 计算当前页的表格数据 */
+const paginatedTableData = computed(() => {
+  const start = (paginationData.currentPage - 1) * paginationData.pageSize
+  const end = start + paginationData.pageSize
+  return tableData.value.slice(start, end)
+})
+
 /** 监听分页参数的变化 */
 watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
   getTableData()
@@ -189,14 +196,15 @@ const beforeAvatarUpload = (rawFile: File) => {
 }
 </script>
 
+
 <template>
   <div>
     <el-card v-loading="loading" shadow="never" class="search-wrapper">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
-        <el-form-item prop="username" label="标题">
+        <el-form-item prop="title" label="标题">
           <el-input v-model="searchData.title" placeholder="请输入" />
         </el-form-item>
-        <el-form-item prop="phone" label="种类">
+        <el-form-item prop="category" label="种类">
           <el-input v-model="searchData.category" placeholder="请输入" />
         </el-form-item>
         <el-form-item>
@@ -218,7 +226,7 @@ const beforeAvatarUpload = (rawFile: File) => {
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="tableData" @selection-change="handleSelectionChange">
+        <el-table :data="paginatedTableData" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center"/>
           <el-table-column label="分类" align="center">
             <template v-slot="scope">
@@ -282,7 +290,7 @@ const beforeAvatarUpload = (rawFile: File) => {
       width="30%"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
-        <el-form-item prop="category" label="分类">
+        <el-form-item prop="categories" label="分类">
           <el-select v-model="formData.categories" multiple placeholder="请选择分类">
             <el-option v-for="category in categoryData" :key="category.id" :label="category.categoryName" :value="category.categoryName"/>
           </el-select>
@@ -322,6 +330,7 @@ const beforeAvatarUpload = (rawFile: File) => {
     </el-dialog>
   </div>
 </template>
+
 
 
 <style lang="scss" scoped>

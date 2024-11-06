@@ -35,6 +35,7 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
       /** 接口代理 */
       proxy: {
         '/api': {
+          // target: 'http://120.26.93.27:8888',
           target: 'http://localhost:8888',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
@@ -61,7 +62,7 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
            */
           manualChunks: {
             vue: ["vue", "vue-router", "pinia"],
-            element: ["user-manage", "@user-manage/icons-vue"],
+
             vxe: ["vxe-table", "vxe-table-plugin-element", "xe-utils"]
           }
         }

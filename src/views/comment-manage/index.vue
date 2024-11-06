@@ -1,29 +1,25 @@
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue"
+import { reactive, ref, computed, watch } from "vue";
 import {
   getCommentDataApi,
   deleteCommentApi,
   deleteReplyApi
-} from "@/api/table/comment"
-import { type CommentData,type CommentReplyData } from "@/api/table/comment/types/comment"
-import { ElMessage, ElMessageBox } from "element-plus"
-import { Delete } from "@element-plus/icons-vue"
-import { usePagination } from "@/hooks/usePagination"
-import { useUserStore } from "@/store/modules/user"
+} from "@/api/table/comment";
+import { type CommentData, type CommentReplyData } from "@/api/table/comment/types/comment";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Delete } from "@element-plus/icons-vue";
+import { useUserStore } from "@/store/modules/user";
 
 // 定义组件选项
 defineOptions({
   name: "CommentManage"
-})
+});
 
 // 加载状态
-const loading = ref<boolean>(false)
-
-// 分页数据
-const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
+const loading = ref<boolean>(false);
 
 // 获取用户 token
-const token = useUserStore().token
+const token = useUserStore().token;
 
 // 默认表单数据
 const DEFAULT_FORM_DATA: CommentData = {
@@ -33,11 +29,67 @@ const DEFAULT_FORM_DATA: CommentData = {
   content: "",
   itemId: undefined,
   replies: []
-}
-
+};
 
 // 选中的行
-const selectedRows = ref<CommentData[]>([])
+const selectedRows = ref<CommentData[]>([]);
+
+// 评论数据
+const comments = ref<CommentData[]>([]);
+const commentReply = ref<CommentReplyData[]>([]);
+
+// 评论分页数据
+const commentPagination = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0,
+  layout: 'total, sizes, prev, pager, next, jumper',
+  pageSizes: [10, 20, 30, 40]
+});
+
+// 回复分页数据
+const replyPagination = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0,
+  layout: 'total, sizes, prev, pager, next, jumper',
+  pageSizes: [10, 20, 30, 40]
+});
+
+// 计算当前页的评论数据
+const paginatedComments = computed(() => {
+  const start = (commentPagination.currentPage - 1) * commentPagination.pageSize;
+  const end = start + commentPagination.pageSize;
+  return comments.value.slice(start, end);
+});
+
+// 计算当前页的回复数据
+const paginatedReplies = computed(() => {
+  const start = (replyPagination.currentPage - 1) * replyPagination.pageSize;
+  const end = start + replyPagination.pageSize;
+  return commentReply.value.slice(start, end);
+});
+
+// 获取评论数据
+const getCommentData = () => {
+  loading.value = true;
+  getCommentDataApi()
+    .then((data) => {
+      comments.value = data.data
+      commentReply.value = data.data[0].commentReply
+
+      // 更新分页总数
+      commentPagination.total = comments.value.length;
+      replyPagination.total = commentReply.value.length;
+    })
+    .catch(() => {
+      comments.value = [];
+      commentReply.value = [];
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+};
 
 // 处理删除评论
 const handleCommentDelete = (ids: number[]) => {
@@ -47,11 +99,12 @@ const handleCommentDelete = (ids: number[]) => {
     type: "warning"
   }).then(() => {
     deleteCommentApi(ids).then(() => {
-      ElMessage.success("删除成功")
-      getCommentData()
-    })
-  })
-}
+      ElMessage.success("删除成功");
+      getCommentData();
+    });
+  });
+};
+
 const handleReplyDelete = (ids: number[]) => {
   ElMessageBox.confirm("确认删除？", "提示", {
     confirmButtonText: "确定",
@@ -59,81 +112,69 @@ const handleReplyDelete = (ids: number[]) => {
     type: "warning"
   }).then(() => {
     deleteReplyApi(ids).then(() => {
-      ElMessage.success("删除成功")
-      getCommentData()
-    })
-  })
-}
+      ElMessage.success("删除成功");
+      getCommentData();
+    });
+  });
+};
+
 // 处理选择变化
 const handleCommentSelectionChange = (selection: CommentData[]) => {
-  selectedRows.value = selection
-}
+  selectedRows.value = selection;
+};
+
 const handleReplySelectionChange = (selection: CommentReplyData[]) => {
-  selectedRows.value = selection
-}
+  selectedRows.value = selection;
+};
+
 // 处理批量删除
 const handleReplyBatchDelete = () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning("请至少选择一条记录")
-    return
+    ElMessage.warning("请至少选择一条记录");
+    return;
   }
   ElMessageBox.confirm(`正在删除 ${selectedRows.value.length} 条记录，确认删除？`, "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
   }).then(() => {
-    const ids = selectedRows.value.map(row => row.id)
+    const ids = selectedRows.value.map(row => row.id);
     deleteReplyApi(ids).then(() => {
-      ElMessage.success("删除成功")
-      getCommentData()
-    })
-  })
-}
+      ElMessage.success("删除成功");
+      getCommentData();
+    });
+  });
+};
+
 const handleCommentBatchDelete = () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning("请至少选择一条记录")
-    return
+    ElMessage.warning("请至少选择一条记录");
+    return;
   }
   ElMessageBox.confirm(`正在删除 ${selectedRows.value.length} 条记录，确认删除？`, "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
   }).then(() => {
-    const ids = selectedRows.value.map(row => row.id)
+    const ids = selectedRows.value.map(row => row.id);
     deleteCommentApi(ids).then(() => {
-      ElMessage.success("删除成功")
-      getCommentData()
-    })
-  })
-}
+      ElMessage.success("删除成功");
+      getCommentData();
+    });
+  });
+};
 
-
-// 评论数据
-const comments = ref<CommentData[]>([])
-const commentReply =ref<CommentReplyData[]>([])
-
-// 获取评论数据
-const getCommentData = () => {
-  loading.value = true
-  getCommentDataApi()
-    .then((data) => {
-      paginationData.total = data.data.length
-      comments.value = data.data
-      commentReply.value = data.data[0].commentReply
-    })
-    .catch(() => {
-      comments.value = []
-    })
-    .finally(() => {
-      loading.value = false
-    })
-}
-
+// 初始化获取评论数据
+getCommentData();
 
 // 监听分页参数的变化
-watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
-  getCommentData()
-}, { immediate: true })
+watch([() => commentPagination.currentPage, () => commentPagination.pageSize], () => {
+  // 重新计算评论分页数据
+});
+
+watch([() => replyPagination.currentPage, () => replyPagination.pageSize], () => {
+  // 重新计算回复分页数据
+});
 </script>
 
 <template>
@@ -151,7 +192,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
       </div>
       <div class="table-wrapper">
         <span>评论列表</span>
-        <el-table :data="comments" @selection-change="handleCommentSelectionChange">
+        <el-table :data="paginatedComments" @selection-change="handleCommentSelectionChange">
           <el-table-column type="selection" width="50" align="center"/>
           <el-table-column prop="commentAuthor.name" label="评论作者" align="center"/>
           <el-table-column prop="commentAuthor.avatar" label="头像" align="center">
@@ -178,6 +219,18 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
           </el-table-column>
         </el-table>
       </div>
+      <div class="pager-wrapper">
+        <el-pagination
+          background
+          :layout="commentPagination.layout"
+          :page-sizes="commentPagination.pageSizes"
+          :total="commentPagination.total"
+          :page-size="commentPagination.pageSize"
+          :current-page="commentPagination.currentPage"
+          @size-change="(size) => { commentPagination.pageSize = size; commentPagination.currentPage = 1; }"
+          @current-change="(page) => { commentPagination.currentPage = page; }"
+        />
+      </div>
       <div class="toolbar-wrapper">
         <div>
           <el-button type="danger" :icon="Delete" @click="handleReplyBatchDelete">批量删除</el-button>
@@ -185,7 +238,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
       </div>
       <div class="table-wrapper">
         <span>回复列表</span>
-        <el-table :data="commentReply" @selection-change="handleReplySelectionChange">
+        <el-table :data="paginatedReplies" @selection-change="handleReplySelectionChange">
           <el-table-column type="selection" width="50" align="center"/>
           <el-table-column prop="replyAuthor.name" label="评论作者" align="center"/>
           <el-table-column prop="replyAuthor" label="头像" align="center">
@@ -215,18 +268,19 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
       <div class="pager-wrapper">
         <el-pagination
           background
-          :layout="paginationData.layout"
-          :page-sizes="paginationData.pageSizes"
-          :total="paginationData.total"
-          :page-size="paginationData.pageSize"
-          :current-page="paginationData.currentPage"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+          :layout="replyPagination.layout"
+          :page-sizes="replyPagination.pageSizes"
+          :total="replyPagination.total"
+          :page-size="replyPagination.pageSize"
+          :current-page="replyPagination.currentPage"
+          @size-change="(size) => { replyPagination.pageSize = size; replyPagination.currentPage = 1; }"
+          @current-change="(page) => { replyPagination.currentPage = page; }"
         />
       </div>
     </el-card>
   </div>
 </template>
+
 
 <style lang="scss" scoped>
 .avatar-uploader .el-upload {

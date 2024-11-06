@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive, watch, onMounted } from "vue";
+import { ref, reactive, computed, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Refresh, CirclePlus, Delete, RefreshRight, Plus } from "@element-plus/icons-vue";
 import { usePagination } from "@/hooks/usePagination";
@@ -16,15 +16,24 @@ defineOptions({
 const loading = ref<boolean>(false);
 
 // 分页数据
-const { paginationData, handleCurrentChange, handleSizeChange } = usePagination();
+const { paginationData: normalPaginationData, handleCurrentChange: handleNormalCurrentChange, handleSizeChange: handleNormalSizeChange } = usePagination();
+const { paginationData: systemPaginationData, handleCurrentChange: handleSystemCurrentChange, handleSizeChange: handleSystemSizeChange } = usePagination();
 
 // 获取用户 token
 const token = useUserStore().token;
 
 // 表格数据
-const tableData = ref<NoticeData[]>([]);
-const normalNotices = ref<NoticeData[]>([]);
-const systemNotices = ref<NoticeData[]>([]);
+const allTableData = ref<NoticeData[]>([]);
+const normalNotices = computed(() => {
+  const start = (normalPaginationData.currentPage - 1) * normalPaginationData.pageSize;
+  const end = start + normalPaginationData.pageSize;
+  return allTableData.value.filter((item) => item.recipientId !== 0).slice(start, end);
+});
+const systemNotices = computed(() => {
+  const start = (systemPaginationData.currentPage - 1) * systemPaginationData.pageSize;
+  const end = start + systemPaginationData.pageSize;
+  return allTableData.value.filter((item) => item.recipientId === 0).slice(start, end);
+});
 
 // 表单数据
 const formData = reactive({
@@ -42,14 +51,13 @@ const getTableData = () => {
   loading.value = true;
   getNoticeDataApi()
     .then((data) => {
-      paginationData.total = data.total;
-      tableData.value = data.data;
-      normalNotices.value = data.data.filter((item) => item.recipientId !== 0);
-      systemNotices.value = data.data.filter((item) => item.recipientId === 0);
+      allTableData.value = data.data;
+      normalPaginationData.total = data.data.filter((item) => item.recipientId !== 0).length;
+      systemPaginationData.total = data.data.filter((item) => item.recipientId === 0).length;
     })
     .catch(() => {
       ElMessage.error("获取通知数据失败");
-      tableData.value = [];
+      allTableData.value = [];
     })
     .finally(() => {
       loading.value = false;
@@ -124,7 +132,18 @@ const handleAddNotice = () => {
 onMounted(() => {
   getTableData();
 });
+
+// 监听分页参数的变化
+watch([() => normalPaginationData.currentPage, () => normalPaginationData.pageSize], () => {
+  getTableData();
+}, { immediate: true });
+
+watch([() => systemPaginationData.currentPage, () => systemPaginationData.pageSize], () => {
+  getTableData();
+}, { immediate: true });
 </script>
+
+
 
 <template>
   <div class="app-container">
@@ -190,7 +209,20 @@ onMounted(() => {
             </template>
           </el-table-column>
         </el-table>
-
+        <div class="pager-wrapper">
+          <el-pagination
+            background
+            :layout="normalPaginationData.layout"
+            :page-sizes="normalPaginationData.pageSizes"
+            :total="normalPaginationData.total"
+            :page-size="normalPaginationData.pageSize"
+            :current-page="normalPaginationData.currentPage"
+            @size-change="handleNormalSizeChange"
+            @current-change="handleNormalCurrentChange"
+          />
+        </div>
+      </div>
+      <div class="table-wrapper">
         <!-- 系统通知表格 -->
         <el-table :data="systemNotices" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center" />
@@ -220,18 +252,18 @@ onMounted(() => {
             </template>
           </el-table-column>
         </el-table>
-      </div>
-      <div class="pager-wrapper">
-        <el-pagination
-          background
-          :layout="paginationData.layout"
-          :page-sizes="paginationData.pageSizes"
-          :total="paginationData.total"
-          :page-size="paginationData.pageSize"
-          :current-page="paginationData.currentPage"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <div class="pager-wrapper">
+          <el-pagination
+            background
+            :layout="systemPaginationData.layout"
+            :page-sizes="systemPaginationData.pageSizes"
+            :total="systemPaginationData.total"
+            :page-size="systemPaginationData.pageSize"
+            :current-page="systemPaginationData.currentPage"
+            @size-change="handleSystemSizeChange"
+            @current-change="handleSystemCurrentChange"
+          />
+        </div>
       </div>
     </el-card>
 
@@ -250,6 +282,8 @@ onMounted(() => {
     </el-dialog>
   </div>
 </template>
+
+
 
 
 
@@ -300,6 +334,7 @@ onMounted(() => {
 }
 
 .pager-wrapper {
+  margin-top: 30px;
   display: flex;
   justify-content: flex-end;
 }

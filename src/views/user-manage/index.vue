@@ -1,5 +1,3 @@
-
-
 <template>
   <div class="app-container">
     <el-card v-loading="loading" shadow="never" class="search-wrapper">
@@ -78,12 +76,10 @@
       </div>
       <div class="pager-wrapper">
         <el-pagination
-          background
-          :layout="paginationData.layout"
-          :page-sizes="paginationData.pageSizes"
-          :total="paginationData.total"
-          :page-size="paginationData.pageSize"
           :current-page="paginationData.currentPage"
+          :page-size="paginationData.pageSize"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -169,6 +165,7 @@ defineOptions({
   name: "UserManage"
 })
 
+const total = ref(0);
 const loading = ref<boolean>(false)
 const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
 const token = useUserStore().token
@@ -279,20 +276,23 @@ const searchData = reactive({
   phone: null
 })
 
+
 const getTableData = () => {
-  loading.value = true
+  loading.value = true;
   getUserDataApi()
     .then((data) => {
-      paginationData.total = data.data.length
-      tableData.value = data.data
+      total.value = data.data.length;
+      const start = (paginationData.currentPage - 1) * paginationData.pageSize;
+      const end = start + paginationData.pageSize;
+      tableData.value = data.data.slice(start, end);
     })
     .catch(() => {
-      tableData.value = []
+      tableData.value = [];
     })
     .finally(() => {
-      loading.value = false
-    })
-}
+      loading.value = false;
+    });
+};
 const handleAvatarSuccess = (result: any) => {
   formData.value.avatar = result.data;
   ElMessage.success("上传图片成功")
@@ -318,7 +318,6 @@ const handleSearch = () => {
   paginationData.currentPage = 1
   getUserDataByParams(params)
     .then((data) => {
-      paginationData.total = data.data.length
       tableData.value = data.data
     }).finally(
     () => {
@@ -350,8 +349,8 @@ const handleResetPwd = (id: number) => {
 
 /** 监听分页参数的变化 */
 watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
-  getTableData()
-}, { immediate: true })
+  getTableData();
+}, { immediate: true });
 </script>
 
 

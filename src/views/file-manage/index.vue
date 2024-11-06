@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="tableData" @selection-change="handleSelectionChange">
+        <el-table :data="paginatedTableData" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center" />
           <el-table-column prop="fileName" label="文件名" align="center" width="400"/>
           <el-table-column prop="avatar" label="图片" align="center">
@@ -39,7 +39,6 @@
               <span v-else>暂无更新</span>
             </template>
           </el-table-column>
-
           <el-table-column label="上传者" align="center">
             <template #default="scope">
               <span v-if="scope.row.user && scope.row.user.name">{{ scope.row.user.name }}</span>
@@ -79,8 +78,9 @@
   </div>
 </template>
 
+
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue";
+import { reactive, ref, computed, watch } from "vue";
 import { getFileDataApi, deleteFileDataApi } from "@/api/table/file";
 import { type FileData } from "@/api/table/file/types/file";
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus";
@@ -89,18 +89,34 @@ import { usePagination } from "@/hooks/usePagination";
 import { cloneDeep } from "lodash-es";
 import { useUserStore } from "@/store/modules/user";
 
+// 定义组件选项
 defineOptions({
-  // 命名当前组件
   name: "FileManage"
 });
 
+// 加载状态
 const loading = ref<boolean>(false);
+
+// 分页数据
 const { paginationData, handleCurrentChange, handleSizeChange } = usePagination();
+
+// 获取用户 token
 const token = useUserStore().token;
 
-//#region 删
+// 选中的行
 const selectedRows = ref<FileData[]>([]);
 
+// 表格数据
+const tableData = ref<FileData[]>([]);
+
+// 计算当前页的表格数据
+const paginatedTableData = computed(() => {
+  const start = (paginationData.currentPage - 1) * paginationData.pageSize;
+  const end = start + paginationData.pageSize;
+  return tableData.value.slice(start, end);
+});
+
+// 处理删除文件
 const handleDelete = (filenames: string[]) => {
   ElMessageBox.confirm("确认删除？", "提示", {
     confirmButtonText: "确定",
@@ -114,10 +130,12 @@ const handleDelete = (filenames: string[]) => {
   });
 };
 
+// 处理选择变化
 const handleSelectionChange = (selection: FileData[]) => {
   selectedRows.value = selection;
 };
 
+// 处理批量删除
 const handleBatchDelete = () => {
   if (selectedRows.value.length === 0) {
     ElMessage.warning("请至少选择一条记录");
@@ -136,8 +154,7 @@ const handleBatchDelete = () => {
   });
 };
 
-const tableData = ref<FileData[]>([]);
-
+// 获取表格数据
 const getTableData = () => {
   loading.value = true;
   getFileDataApi()
@@ -153,13 +170,14 @@ const getTableData = () => {
     });
 };
 
-/** 监听分页参数的变化 */
+// 初始化获取表格数据
+getTableData();
+
+// 监听分页参数的变化
 watch([() => paginationData.currentPage, () => paginationData.pageSize], () => {
   getTableData();
 }, { immediate: true });
 </script>
-
-
 
 
 <style lang="scss" scoped>
