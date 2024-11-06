@@ -11,6 +11,7 @@ export interface NoticeData {
   confirm: number;
   updateTime: string;
   recipientId: number;
+  system: number;
   recipient: UserData;
 }
 export type NoticeResponseData = ApiResponseData<{

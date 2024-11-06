@@ -27,13 +27,15 @@ const allTableData = ref<NoticeData[]>([]);
 const normalNotices = computed(() => {
   const start = (normalPaginationData.currentPage - 1) * normalPaginationData.pageSize;
   const end = start + normalPaginationData.pageSize;
-  return allTableData.value.filter((item) => item.recipientId !== 0).slice(start, end);
+  return allTableData.value.filter((item) => item.system !== 1).slice(start, end);
 });
+
 const systemNotices = computed(() => {
   const start = (systemPaginationData.currentPage - 1) * systemPaginationData.pageSize;
   const end = start + systemPaginationData.pageSize;
-  return allTableData.value.filter((item) => item.recipientId === 0).slice(start, end);
+  return allTableData.value.filter((item) => item.system === 1).slice(start, end);
 });
+
 
 // 表单数据
 const formData = reactive({
@@ -52,8 +54,8 @@ const getTableData = () => {
   getNoticeDataApi()
     .then((data) => {
       allTableData.value = data.data;
-      normalPaginationData.total = data.data.filter((item) => item.recipientId !== 0).length;
-      systemPaginationData.total = data.data.filter((item) => item.recipientId === 0).length;
+      normalPaginationData.total = data.data.filter((item) => item.system !== 1).length;
+      systemPaginationData.total = data.data.filter((item) => item.system === 1).length;
     })
     .catch(() => {
       ElMessage.error("获取通知数据失败");
@@ -63,6 +65,7 @@ const getTableData = () => {
       loading.value = false;
     });
 };
+
 
 // 处理选择变化
 const handleSelectionChange = (selection: NoticeData[]) => {
@@ -141,6 +144,7 @@ watch([() => normalPaginationData.currentPage, () => normalPaginationData.pageSi
 watch([() => systemPaginationData.currentPage, () => systemPaginationData.pageSize], () => {
   getTableData();
 }, { immediate: true });
+
 </script>
 
 
@@ -246,6 +250,24 @@ watch([() => systemPaginationData.currentPage, () => systemPaginationData.pageSi
             </template>
           </el-table-column>
           <el-table-column prop="updateTime" label="更新时间" align="center" />
+          <el-table-column label="接收者姓名" align="center" width="120">
+            <template #default="scope">
+              {{ scope.row.recipient.name || '系统通知' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="recipient.avatar" label="接收者头像" align="center" width="80">
+            <template #default="scope">
+              <el-image
+                v-if="scope.row.recipient.avatar"
+                style="width: 40px; height: 40px"
+                :src="scope.row.recipient.avatar"
+                :preview-src-list="[scope.row.recipient.avatar]"
+                hide-on-click-modal
+                :preview-teleported="true"
+              />
+              <span v-else>无头像</span>
+            </template>
+          </el-table-column>
           <el-table-column fixed="right" label="操作" width="350" align="center">
             <template #default="scope">
               <el-button type="danger" text bg size="small" @click="handleDelete([scope.row.id])">删除</el-button>
