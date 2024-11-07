@@ -58,12 +58,10 @@ onUnmounted(() => {
 getUserInfo();
 const getSexTagType = (sex: number): string => {
   switch (sex) {
-    case 0:
-      return 'info';
     case 1:
       return 'primary';
-    case 2:
-      return 'warning';
+    case 0:
+      return 'danger';
     default:
       return 'info';
   }
@@ -91,7 +89,7 @@ const getSexTagType = (sex: number): string => {
           <el-table-column label="性别">
             <template #default="scope">
               <el-tag :type="getSexTagType(scope.row.sex)">
-                {{ scope.row.sex === 0 ? '未知' : (scope.row.sex === 1 ? '男' : '女') }}
+                {{ (scope.row.sex === 1 ? '男' : '女') }}
               </el-tag>
             </template>
           </el-table-column>

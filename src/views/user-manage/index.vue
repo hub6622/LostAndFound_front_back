@@ -36,8 +36,16 @@
               <el-tag v-else type="warning" effect="plain">user</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="phone" label="手机号" align="center" />
-          <el-table-column prop="email" label="邮箱" align="center" />
+          <el-table-column prop="phone" label="手机号" align="center">
+            <template #default="scope">
+              <span>{{ scope.row.phone ? scope.row.phone : '暂无联系方式' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="email" label="邮箱" align="center">
+            <template #default="scope">
+              <span>{{ scope.row.email ? scope.row.email : '暂无联系方式' }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="sex" width="60" label="性别" align="center">
             <template #default="scope">
               <el-tag v-if="scope.row.sex === 0" type="danger" effect="plain">女</el-tag>
@@ -46,16 +54,23 @@
           </el-table-column>
           <el-table-column prop="avatar" label="头像" align="center">
             <template #default="scope">
-              <el-image
-                style="width: 40px; height: 40px"
-                :src="scope.row.avatar"
-                :preview-src-list="[scope.row.avatar]"
-                hide-on-click-modal
-                :preview-teleported="true"
-              />
+              <div v-if="scope.row.avatar">
+                <el-image
+                  style="width: 40px; height: 40px"
+                  :src="scope.row.avatar"
+                  :preview-src-list="[scope.row.avatar]"
+                  hide-on-click-modal
+                  :preview-teleported="true"
+                />
+              </div>
+              <span v-else>无头像</span>
             </template>
           </el-table-column>
-          <el-table-column prop="loginTime" label="最后登录时间" align="center" />
+          <el-table-column prop="loginTime" label="最后登录时间" align="center">
+            <template #default="scope">
+              <span>{{ scope.row.loginTime ? scope.row.loginTime : '用户暂未登录过' }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="status" label="状态" align="center">
             <template #default="scope">
               <el-tag v-if="scope.row.status" type="success" effect="plain">启用</el-tag>
@@ -76,6 +91,7 @@
       </div>
       <div class="pager-wrapper">
         <el-pagination
+          background
           :current-page="paginationData.currentPage"
           :page-size="paginationData.pageSize"
           :total="total"

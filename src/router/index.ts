@@ -198,6 +198,26 @@ export const constantRoutes: RouteRecordRaw[] = [
         },
         children: [
           {
+            path: "https://element-plus.org/zh-CN/component/overview.html",
+            component: () => {
+            },
+            name: "Link3",
+            meta: {
+              title: "ElementPlus",
+              svgIcon: "tutorial"
+            }
+          },
+          {
+            path: "https://www.iconfont.cn/",
+            component: () => {
+            },
+            name: "Link4",
+            meta: {
+              title: "icon网站",
+              svgIcon: "document"
+            }
+          },
+          {
             path: "https://github.com/hub6622/LostAndFound_front_back",
             component: () => {
             },
@@ -220,7 +240,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         ]
       },
       {
-        path: "https://juejin.cn/post/7089377403717287972",
+        path: "https://github.com/hub6622/LostAndFound_front_back",
         component: () => {
         },
         name: "Link1",
